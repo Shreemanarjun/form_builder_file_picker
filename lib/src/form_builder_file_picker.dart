@@ -201,10 +201,6 @@ class _FormBuilderFilePickerState
             imageQuality: 100,
             preferredCameraDevice: CameraDevice.rear,
             bottomSheetPadding: EdgeInsets.zero,
-            cameraIcon: const Icon(Icons.camera_enhance),
-            cameraLabel: const Text('Camera'),
-            galleryIcon: const Icon(Icons.image),
-            galleryLabel: const Text('Gallery'),
             type: widget.type,
             allowedExtensions: widget.allowedExtensions,
             allowCompression: widget.allowCompression,
@@ -214,15 +210,7 @@ class _FormBuilderFilePickerState
             withReadStream: widget.withReadStream,
             onImageSelected: (images) async {
               state.requestFocus();
-              var newImages = [];
-              // final newImages = images
-              //     .map((e) async => PlatformFile(
-              //           name: e.name,
-              //           size: File(e.path).lengthSync(),
-              //           bytes: await e.readAsBytes(),
-              //           path: e.path,
-              //         ))
-              //     .toList();
+              var newImages = <PlatformFile>[];
               for (var image in images) {
                 final newImage = PlatformFile(
                   name: image.name,
@@ -233,7 +221,6 @@ class _FormBuilderFilePickerState
                 );
                 newImages.add(newImage);
               }
-
               _setFiles([..._files, ...newImages], state);
               field.didChange([...?value, ...newImages]);
               if (!mounted) return;
@@ -242,6 +229,7 @@ class _FormBuilderFilePickerState
             onFileSelected: (files) {
               setState(() => _files = [..._files, ...files]);
               field.didChange(_files);
+              if (!mounted) return;
               Navigator.of(context).pop();
             },
           );

@@ -28,10 +28,13 @@ class ImageSourceBottomSheet extends StatefulWidget {
   // Callback when files are selected.
   final void Function(List<PlatformFile> files) onFileSelected;
 
-  final Widget? cameraIcon;
-  final Widget? galleryIcon;
-  final Widget? cameraLabel;
-  final Widget? galleryLabel;
+  final Widget bottomSheetHeader;
+  final Widget cameraIcon;
+  final Widget galleryIcon;
+  final Widget cameraLabel;
+  final Widget galleryLabel;
+  final Widget fileIcon;
+  final Widget fileLabel;
   final EdgeInsets? bottomSheetPadding;
   final bool preventPop;
 
@@ -52,10 +55,12 @@ class ImageSourceBottomSheet extends StatefulWidget {
     this.imageQuality,
     this.preferredCameraDevice = CameraDevice.rear,
     required this.onImageSelected,
-    this.cameraIcon,
-    this.galleryIcon,
-    this.cameraLabel,
-    this.galleryLabel,
+    this.cameraIcon = const Icon(Icons.camera_enhance),
+    this.cameraLabel = const Text('Camera'),
+    this.galleryIcon = const Icon(Icons.image),
+    this.galleryLabel = const Text('Gallery'),
+    this.fileIcon = const Icon(Icons.folder),
+    this.fileLabel = const Text('Pick from files'),
     this.bottomSheetPadding,
     this.type = FileType.any,
     this.allowedExtensions,
@@ -65,10 +70,14 @@ class ImageSourceBottomSheet extends StatefulWidget {
     this.withData = false,
     this.withReadStream = false,
     required this.onFileSelected,
+    this.bottomSheetHeader = const Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Text("Select Files From "),
+    ),
   }) : super(key: key);
 
   @override
-  _ImageSourceBottomSheetState createState() => _ImageSourceBottomSheetState();
+  State<ImageSourceBottomSheet> createState() => _ImageSourceBottomSheetState();
 }
 
 class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
@@ -109,7 +118,6 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
   }
 
   Future<void> _onFilesSelected() async {
-    
     FilePickerResult? resultList;
     try {
       if (kIsWeb || await Permission.storage.request().isGranted) {
@@ -137,34 +145,36 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
   @override
   Widget build(BuildContext context) {
     Widget res = Container(
-      height: 100,
+      height: MediaQuery.of(context).size.height * 0.2,
       width: MediaQuery.of(context).size.width,
       padding: widget.bottomSheetPadding,
-      child: SizedBox(
-        height: 100,
-        child: Wrap(
-          alignment: WrapAlignment.center,
-          children: <Widget>[
-            ElevatedButton.icon(
-              onPressed: () => _onPickImage(ImageSource.camera),
-              icon: widget.cameraIcon!,
-              label: widget.cameraLabel!,
-            ),
-            const SizedBox(
-              width: 40,
-            ),
-            ElevatedButton.icon(
-              onPressed: () => _onPickImage(ImageSource.gallery),
-              icon: widget.galleryIcon!,
-              label: widget.galleryLabel!,
-            ),
-            ElevatedButton.icon(
-              onPressed: _onFilesSelected,
-              icon: const Icon(Icons.folder),
-              label: const Text('Pick from files'),
-            ),
-          ],
-        ),
+      child: Column(
+        children: [
+          widget.bottomSheetHeader,
+          Wrap(
+            alignment: WrapAlignment.center,
+            children: <Widget>[
+              ElevatedButton.icon(
+                onPressed: () => _onPickImage(ImageSource.camera),
+                icon: widget.cameraIcon,
+                label: widget.cameraLabel,
+              ),
+              const SizedBox(
+                width: 40,
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _onPickImage(ImageSource.gallery),
+                icon: widget.galleryIcon,
+                label: widget.galleryLabel,
+              ),
+              ElevatedButton.icon(
+                onPressed: _onFilesSelected,
+                icon: widget.fileIcon,
+                label: widget.fileLabel,
+              ),
+            ],
+          ),
+        ],
       ),
     );
     if (widget.preventPop) {

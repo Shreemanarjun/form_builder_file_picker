@@ -45,7 +45,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 decoration: const InputDecoration(labelText: 'Attachments'),
                 maxFiles: null,
                 allowMultiple: true,
+                type: FileType.custom,
+                allowedExtensions: const ['jpg', 'png', 'pdf'],
                 previewImages: true,
+                showImagePickerOnImageExtensions: true,
+                withData: false,
+                withReadStream: false,
                 onChanged: (val) => debugPrint(val.toString()),
                 selector: Row(
                   children: const <Widget>[

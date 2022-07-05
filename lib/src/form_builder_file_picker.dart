@@ -6,6 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_file_picker/src/image_source_sheet.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// Signature of a function to build a custom file viewer [Widget] for
@@ -62,6 +64,8 @@ class FormBuilderFilePicker extends FormBuilderField<List<PlatformFile>> {
   /// to support user interactions with the picked files.
   final FileViewerBuilder? customFileViewerBuilder;
 
+  final bool showImagePickerOnImageExtensions;
+
   /// Creates field for image(s) from user device storage
   FormBuilderFilePicker({
     //From Super
@@ -88,6 +92,7 @@ class FormBuilderFilePicker extends FormBuilderField<List<PlatformFile>> {
     this.onFileLoading,
     this.allowCompression = true,
     this.customFileViewerBuilder,
+    this.showImagePickerOnImageExtensions = false,
   }) : super(
           key: key,
           initialValue: initialValue,
@@ -117,7 +122,7 @@ class FormBuilderFilePicker extends FormBuilderField<List<PlatformFile>> {
                         onTap: state.enabled &&
                                 (null == state._remainingItemCount ||
                                     state._remainingItemCount! > 0)
-                            ? () => state.pickFiles(field)
+                            ? () => state.pickFiles(field, state)
                             : null,
                         child: selector,
                       ),
@@ -163,6 +168,14 @@ class _FormBuilderFilePickerState
 
   List<PlatformFile> _files = [];
 
+  bool isAllowedExtensionContainsAnyImageFileExtension() {
+    if (widget.allowedExtensions == null) return false;
+    for (String ext in widget.allowedExtensions!) {
+      if (imageFileExts.contains(ext)) return true;
+    }
+    return false;
+  }
+
   int? get _remainingItemCount =>
       widget.maxFiles == null ? null : widget.maxFiles! - _files.length;
 
@@ -172,26 +185,88 @@ class _FormBuilderFilePickerState
     _files = widget.initialValue ?? [];
   }
 
-  Future<void> pickFiles(FormFieldState<List<PlatformFile>?> field) async {
+  Future<void> pickFiles(FormFieldState<List<PlatformFile>?> field,
+      _FormBuilderFilePickerState state) async {
     FilePickerResult? resultList;
+    if (isAllowedExtensionContainsAnyImageFileExtension() &&
+        widget.showImagePickerOnImageExtensions) {
+      await showModalBottomSheet<void>(
+        context: state.context,
+        builder: (_) {
+          return ImageSourceBottomSheet(
+            maxHeight: 400,
+            maxWidth: 400,
+            preventPop: true,
+            remainingImages: _remainingItemCount,
+            imageQuality: 100,
+            preferredCameraDevice: CameraDevice.rear,
+            bottomSheetPadding: EdgeInsets.zero,
+            cameraIcon: const Icon(Icons.camera_enhance),
+            cameraLabel: const Text('Camera'),
+            galleryIcon: const Icon(Icons.image),
+            galleryLabel: const Text('Gallery'),
+            type: widget.type,
+            allowedExtensions: widget.allowedExtensions,
+            allowCompression: widget.allowCompression,
+            onFileLoading: widget.onFileLoading,
+            allowMultiple: widget.allowMultiple,
+            withData: widget.withData,
+            withReadStream: widget.withReadStream,
+            onImageSelected: (images) async {
+              state.requestFocus();
+              var newImages = [];
+              // final newImages = images
+              //     .map((e) async => PlatformFile(
+              //           name: e.name,
+              //           size: File(e.path).lengthSync(),
+              //           bytes: await e.readAsBytes(),
+              //           path: e.path,
+              //         ))
+              //     .toList();
+              for (var image in images) {
+                final newImage = PlatformFile(
+                  name: image.name,
+                  size: File(image.path).lengthSync(),
+                  bytes: widget.withData ? await image.readAsBytes() : null,
+                  readStream: widget.withReadStream ? image.openRead() : null,
+                  path: image.path,
+                );
+                newImages.add(newImage);
+              }
 
-    try {
-      if (kIsWeb || await Permission.storage.request().isGranted) {
-        resultList = await FilePicker.platform.pickFiles(
-          type: widget.type,
-          allowedExtensions: widget.allowedExtensions,
-          allowCompression: widget.allowCompression,
-          onFileLoading: widget.onFileLoading,
-          allowMultiple: widget.allowMultiple,
-          withData: widget.withData,
-          withReadStream: widget.withReadStream,
-        );
-      } else {
-        throw Exception('Storage Permission not granted');
+              _setFiles([..._files, ...newImages], state);
+              field.didChange([...?value, ...newImages]);
+              if (!mounted) return;
+              Navigator.of(context).pop();
+            },
+            onFileSelected: (files) {
+              setState(() => _files = [..._files, ...files]);
+              field.didChange(_files);
+              Navigator.of(context).pop();
+            },
+          );
+        },
+      );
+    } else {
+      try {
+        if (kIsWeb || await Permission.storage.request().isGranted) {
+          resultList = await FilePicker.platform.pickFiles(
+            type: widget.type,
+            allowedExtensions: widget.allowedExtensions,
+            allowCompression: widget.allowCompression,
+            onFileLoading: widget.onFileLoading,
+            allowMultiple: widget.allowMultiple,
+            withData: widget.withData,
+            withReadStream: widget.withReadStream,
+          );
+        } else {
+          throw Exception('Storage Permission not granted');
+        }
+      } on Exception catch (e) {
+        debugPrint(e.toString());
       }
-    } on Exception catch (e) {
-      debugPrint(e.toString());
     }
+
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
     // setState to update our non-existent appearance.

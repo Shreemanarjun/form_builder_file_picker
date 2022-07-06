@@ -132,8 +132,11 @@ class FormBuilderFilePicker extends FormBuilderField<List<PlatformFile>> {
                   customFileViewerBuilder != null
                       ? customFileViewerBuilder.call(state._files,
                           (files) => state._setFiles(files ?? [], field))
-                      : state.defaultFileViewer(state._files,
-                          (files) => state._setFiles(files ?? [], field)),
+                      : state.defaultFileViewer(
+                          state._files,
+                          (files) => state._setFiles(files ?? [], field),
+                          state,
+                          field),
                 ],
               ),
             );
@@ -279,7 +282,10 @@ class _FormBuilderFilePickerState
   }
 
   Widget defaultFileViewer(
-      List<PlatformFile> files, FormFieldSetter<List<PlatformFile>> setter) {
+      List<PlatformFile> files,
+      FormFieldSetter<List<PlatformFile>> setter,
+      _FormBuilderFilePickerState state,
+      _FormBuilderFilePickerState field) {
     final theme = Theme.of(context);
 
     return LayoutBuilder(
@@ -290,82 +296,94 @@ class _FormBuilderFilePickerState
             (constraints.biggest.width - (count * spacing)) / count;
         return Wrap(
           // scrollDirection: Axis.horizontal,
-          alignment: WrapAlignment.start,
+          alignment: WrapAlignment.center,
           runAlignment: WrapAlignment.start,
           runSpacing: 10,
           spacing: 10,
-          children: List.generate(
-            files.length,
-            (index) {
-              return Container(
-                height: itemSize,
-                width: itemSize,
-                margin: const EdgeInsets.only(right: 2),
-                child: Stack(
-                  alignment: Alignment.bottomCenter,
-                  children: <Widget>[
-                    Container(
-                      alignment: Alignment.center,
-                      child: (imageFileExts.contains(
-                                  files[index].extension!.toLowerCase()) &&
-                              widget.previewImages)
-                          ? kIsWeb
-                              ? Image.memory(files[index].bytes!,
-                                  fit: BoxFit.cover)
-                              : Image.file(File(files[index].path!),
-                                  fit: BoxFit.cover)
-                          : Container(
-                              alignment: Alignment.center,
-                              color: theme.primaryColor,
-                              child: Icon(
-                                getIconData(files[index].extension!),
-                                color: Colors.white,
-                                size: 56,
+          children: [
+            ...List.generate(
+              files.length,
+              (index) {
+                return Container(
+                  height: itemSize,
+                  width: itemSize,
+                  margin: const EdgeInsets.only(right: 2),
+                  child: Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: <Widget>[
+                      Container(
+                        alignment: Alignment.center,
+                        child: (imageFileExts.contains(
+                                    files[index].extension!.toLowerCase()) &&
+                                widget.previewImages)
+                            ? kIsWeb
+                                ? Image.memory(files[index].bytes!,
+                                    fit: BoxFit.cover)
+                                : Image.file(File(files[index].path!),
+                                    fit: BoxFit.cover)
+                            : Container(
+                                alignment: Alignment.center,
+                                color: theme.primaryColor,
+                                child: Icon(
+                                  getIconData(files[index].extension!),
+                                  color: Colors.white,
+                                  size: 56,
+                                ),
                               ),
-                            ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      width: double.infinity,
-                      color: Colors.white.withOpacity(.8),
-                      child: Text(
-                        files[index].name,
-                        style: theme.textTheme.caption,
-                        maxLines: 2,
-                        overflow: TextOverflow.clip,
                       ),
-                    ),
-                    if (enabled)
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: InkWell(
-                          onTap: () {
-                            files.removeAt(index);
-                            setter.call([...files]);
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.all(3),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.withOpacity(.7),
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            height: 22,
-                            width: 22,
-                            child: const Icon(
-                              Icons.close,
-                              size: 18,
-                              color: Colors.white,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        width: double.infinity,
+                        color: Colors.white.withOpacity(.8),
+                        child: Text(
+                          files[index].name,
+                          style: theme.textTheme.caption,
+                          maxLines: 2,
+                          overflow: TextOverflow.clip,
+                        ),
+                      ),
+                      if (enabled)
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: InkWell(
+                            onTap: () {
+                              files.removeAt(index);
+                              setter.call([...files]);
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(.7),
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              height: 22,
+                              width: 22,
+                              child: const Icon(
+                                Icons.close,
+                                size: 18,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            if (files.isNotEmpty && enabled)
+
+              ///Add more files button
+              TextButton.icon(
+                onPressed: () {
+                  state.pickFiles(field, state);
+                },
+                icon: const Icon(Icons.add_circle_outline),
+                label: const Text('Add more files'),
+              ),
+          ],
         );
       },
     );

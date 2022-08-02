@@ -42,7 +42,8 @@ class _MyHomePageState extends State<MyHomePage> {
             children: <Widget>[
               FormBuilderFilePicker(
                 name: 'images',
-                decoration: const InputDecoration(labelText: 'Attachments'),
+                decoration:
+                    const InputDecoration(labelText: 'Multi Attachments'),
                 maxFiles: null,
                 allowMultiple: true,
                 type: FileType.custom,
@@ -65,6 +66,30 @@ class _MyHomePageState extends State<MyHomePage> {
                     _useCustomFileViewer ? customFileViewerBuilder : null,
               ),
               const SizedBox(height: 20),
+              FormBuilderFilePicker(
+                name: 'images_maxfiles',
+                decoration: const InputDecoration(labelText: 'Attachments with max files'),
+                maxFiles: 4,
+                allowMultiple: false,
+                type: FileType.custom,
+                allowedExtensions: const ['jpg', 'png'],
+                previewImages: true,
+                showImagePickerOnImageExtensions: true,
+                withData: false,
+                withReadStream: false,
+                onChanged: (val) => debugPrint(val.toString()),
+                selector: Row(
+                  children: const <Widget>[
+                    Icon(Icons.file_upload),
+                    Text('Upload'),
+                  ],
+                ),
+                onFileLoading: (val) {
+                  debugPrint(val.toString());
+                },
+                customFileViewerBuilder:
+                    _useCustomFileViewer ? customFileViewerBuilder : null,
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -120,6 +145,3 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
-
-

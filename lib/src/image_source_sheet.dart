@@ -160,12 +160,15 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
                 label: widget.cameraLabel,
               ),
               const SizedBox(
-                width: 40,
+                width: 8,
               ),
               ElevatedButton.icon(
                 onPressed: () => _onPickImage(ImageSource.gallery),
                 icon: widget.galleryIcon,
                 label: widget.galleryLabel,
+              ),
+              const SizedBox(
+                width: 8,
               ),
               ElevatedButton.icon(
                 onPressed: _onFilesSelected,

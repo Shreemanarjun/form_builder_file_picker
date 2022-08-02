@@ -373,7 +373,10 @@ class _FormBuilderFilePickerState
                 );
               },
             ),
-            if (files.isNotEmpty && enabled)
+            if (files.isNotEmpty &&
+                enabled &&
+                state._remainingItemCount != null &&
+                state._remainingItemCount! > 0)
 
               ///Add more files button
               TextButton.icon(

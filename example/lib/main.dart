@@ -68,7 +68,8 @@ class _MyHomePageState extends State<MyHomePage> {
               const SizedBox(height: 20),
               FormBuilderFilePicker(
                 name: 'images_maxfiles',
-                decoration: const InputDecoration(labelText: 'Attachments with max files'),
+                decoration: const InputDecoration(
+                    labelText: 'Attachments with max files'),
                 maxFiles: 4,
                 allowMultiple: false,
                 type: FileType.custom,
@@ -78,6 +79,38 @@ class _MyHomePageState extends State<MyHomePage> {
                 withData: false,
                 withReadStream: false,
                 onChanged: (val) => debugPrint(val.toString()),
+                selector: Row(
+                  children: const <Widget>[
+                    Icon(Icons.file_upload),
+                    Text('Upload'),
+                  ],
+                ),
+                onFileLoading: (val) {
+                  debugPrint(val.toString());
+                },
+                customFileViewerBuilder:
+                    _useCustomFileViewer ? customFileViewerBuilder : null,
+              ),
+              FormBuilderFilePicker(
+                name: 'photo',
+                decoration:
+                    const InputDecoration(labelText: 'Multi Attachments'),
+                maxFiles: 1,
+                allowMultiple: false,
+                type: FileType.custom,
+                allowedExtensions: const [
+                  'jpg',
+                  'png',
+                ],
+                previewImages: true,
+                showImagePickerOnImageExtensions: true,
+                withData: false,
+                withReadStream: false,
+                onChanged: (val) => debugPrint(val.toString()),
+                onFieldClicked: (field) async {
+                  print('clicked');
+                  field.didChange([...field.value!]);
+                },
                 selector: Row(
                   children: const <Widget>[
                     Icon(Icons.file_upload),

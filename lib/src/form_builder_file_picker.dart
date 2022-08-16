@@ -64,7 +64,11 @@ class FormBuilderFilePicker extends FormBuilderField<List<PlatformFile>> {
   /// to support user interactions with the picked files.
   final FileViewerBuilder? customFileViewerBuilder;
 
+  ///Whether to show bottm sheet fr images or files
   final bool showImagePickerOnImageExtensions;
+
+  /// If you want to add your own logic for file picking.
+  final Function(FormFieldState<List<PlatformFile>?> field)? onFieldClicked;
 
   /// Creates field for image(s) from user device storage
   FormBuilderFilePicker({
@@ -93,6 +97,7 @@ class FormBuilderFilePicker extends FormBuilderField<List<PlatformFile>> {
     this.allowCompression = true,
     this.customFileViewerBuilder,
     this.showImagePickerOnImageExtensions = false,
+    this.onFieldClicked,
   }) : super(
           key: key,
           initialValue: initialValue,
@@ -191,70 +196,74 @@ class _FormBuilderFilePickerState
   Future<void> pickFiles(FormFieldState<List<PlatformFile>?> field,
       _FormBuilderFilePickerState state) async {
     FilePickerResult? resultList;
-    if (isAllowedExtensionContainsAnyImageFileExtension() &&
-        widget.showImagePickerOnImageExtensions) {
-      await showModalBottomSheet<void>(
-        context: state.context,
-        builder: (_) {
-          return ImageSourceBottomSheet(
-            maxHeight: 400,
-            maxWidth: 400,
-            preventPop: true,
-            remainingImages: _remainingItemCount,
-            imageQuality: 100,
-            preferredCameraDevice: CameraDevice.rear,
-            bottomSheetPadding: EdgeInsets.zero,
-            type: widget.type,
-            allowedExtensions: widget.allowedExtensions,
-            allowCompression: widget.allowCompression,
-            onFileLoading: widget.onFileLoading,
-            allowMultiple: widget.allowMultiple,
-            withData: widget.withData,
-            withReadStream: widget.withReadStream,
-            onImageSelected: (images) async {
-              state.requestFocus();
-              var newImages = <PlatformFile>[];
-              for (var image in images) {
-                final newImage = PlatformFile(
-                  name: image.name,
-                  size: File(image.path).lengthSync(),
-                  bytes: widget.withData ? await image.readAsBytes() : null,
-                  readStream: widget.withReadStream ? image.openRead() : null,
-                  path: image.path,
-                );
-                newImages.add(newImage);
-              }
-              _setFiles([..._files, ...newImages], state);
-              field.didChange([...?value, ...newImages]);
-              if (!mounted) return;
-              Navigator.of(context).pop();
-            },
-            onFileSelected: (files) {
-              setState(() => _files = [..._files, ...files]);
-              field.didChange(_files);
-              if (!mounted) return;
-              Navigator.of(context).pop();
-            },
-          );
-        },
-      );
+    if (widget.onFieldClicked != null) {
+      widget.onFieldClicked!.call(field);
     } else {
-      try {
-        if (kIsWeb || await Permission.storage.request().isGranted) {
-          resultList = await FilePicker.platform.pickFiles(
-            type: widget.type,
-            allowedExtensions: widget.allowedExtensions,
-            allowCompression: widget.allowCompression,
-            onFileLoading: widget.onFileLoading,
-            allowMultiple: widget.allowMultiple,
-            withData: widget.withData,
-            withReadStream: widget.withReadStream,
-          );
-        } else {
-          throw Exception('Storage Permission not granted');
+      if (isAllowedExtensionContainsAnyImageFileExtension() &&
+          widget.showImagePickerOnImageExtensions) {
+        await showModalBottomSheet<void>(
+          context: state.context,
+          builder: (_) {
+            return ImageSourceBottomSheet(
+              maxHeight: 400,
+              maxWidth: 400,
+              preventPop: true,
+              remainingImages: _remainingItemCount,
+              imageQuality: 100,
+              preferredCameraDevice: CameraDevice.rear,
+              bottomSheetPadding: EdgeInsets.zero,
+              type: widget.type,
+              allowedExtensions: widget.allowedExtensions,
+              allowCompression: widget.allowCompression,
+              onFileLoading: widget.onFileLoading,
+              allowMultiple: widget.allowMultiple,
+              withData: widget.withData,
+              withReadStream: widget.withReadStream,
+              onImageSelected: (images) async {
+                state.requestFocus();
+                var newImages = <PlatformFile>[];
+                for (var image in images) {
+                  final newImage = PlatformFile(
+                    name: image.name,
+                    size: File(image.path).lengthSync(),
+                    bytes: widget.withData ? await image.readAsBytes() : null,
+                    readStream: widget.withReadStream ? image.openRead() : null,
+                    path: image.path,
+                  );
+                  newImages.add(newImage);
+                }
+                _setFiles([..._files, ...newImages], state);
+                field.didChange([...?value, ...newImages]);
+                if (!mounted) return;
+                Navigator.of(context).pop();
+              },
+              onFileSelected: (files) {
+                setState(() => _files = [..._files, ...files]);
+                field.didChange(_files);
+                if (!mounted) return;
+                Navigator.of(context).pop();
+              },
+            );
+          },
+        );
+      } else {
+        try {
+          if (kIsWeb || await Permission.storage.request().isGranted) {
+            resultList = await FilePicker.platform.pickFiles(
+              type: widget.type,
+              allowedExtensions: widget.allowedExtensions,
+              allowCompression: widget.allowCompression,
+              onFileLoading: widget.onFileLoading,
+              allowMultiple: widget.allowMultiple,
+              withData: widget.withData,
+              withReadStream: widget.withReadStream,
+            );
+          } else {
+            throw Exception('Storage Permission not granted');
+          }
+        } on Exception catch (e) {
+          debugPrint(e.toString());
         }
-      } on Exception catch (e) {
-        debugPrint(e.toString());
       }
     }
 

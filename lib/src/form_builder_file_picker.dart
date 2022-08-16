@@ -68,7 +68,8 @@ class FormBuilderFilePicker extends FormBuilderField<List<PlatformFile>> {
   final bool showImagePickerOnImageExtensions;
 
   /// If you want to add your own logic for file picking.
-  final Function(FormFieldState<List<PlatformFile>?> field)? onFieldClicked;
+  final Future<List<PlatformFile>?> Function(
+      FormFieldState<List<PlatformFile>?> field)? onFieldClicked;
 
   /// Creates field for image(s) from user device storage
   FormBuilderFilePicker({
@@ -197,7 +198,12 @@ class _FormBuilderFilePickerState
       _FormBuilderFilePickerState state) async {
     FilePickerResult? resultList;
     if (widget.onFieldClicked != null) {
-      widget.onFieldClicked!.call(field);
+      var files = await widget.onFieldClicked!.call(field);
+      if (files != null) {
+        _setFiles([..._files, ...files], state);
+        field.didChange([...?value, ...files]);
+        if (!mounted) return;
+      }
     } else {
       if (isAllowedExtensionContainsAnyImageFileExtension() &&
           widget.showImagePickerOnImageExtensions) {

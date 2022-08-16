@@ -108,8 +108,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 withReadStream: false,
                 onChanged: (val) => debugPrint(val.toString()),
                 onFieldClicked: (field) async {
-                  print('clicked');
-                  field.didChange([...field.value!]);
+                 
                 },
                 selector: Row(
                   children: const <Widget>[

@@ -108,8 +108,36 @@ class _MyHomePageState extends State<MyHomePage> {
                 withReadStream: false,
                 onChanged: (val) => debugPrint(val.toString()),
                 onFieldClicked: (field) async {
+                  return null;
+                
                  
                 },
+                selector: Row(
+                  children: const <Widget>[
+                    Icon(Icons.file_upload),
+                    Text('Upload'),
+                  ],
+                ),
+                onFileLoading: (val) {
+                  debugPrint(val.toString());
+                },
+                customFileViewerBuilder:
+                    _useCustomFileViewer ? customFileViewerBuilder : null,
+              ),
+              FormBuilderFilePicker(
+                name: 'docs',
+                decoration:
+                    const InputDecoration(labelText: 'Multi Attachments'),
+                maxFiles: null,
+                allowDocScan: true,
+                allowMultiple: true,
+                type: FileType.custom,
+                allowedExtensions: const ['jpg', 'png', 'pdf'],
+                previewImages: true,
+                showImagePickerOnImageExtensions: true,
+                withData: false,
+                withReadStream: false,
+                onChanged: (val) => debugPrint(val.toString()),
                 selector: Row(
                   children: const <Widget>[
                     Icon(Icons.file_upload),

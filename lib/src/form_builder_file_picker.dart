@@ -64,8 +64,11 @@ class FormBuilderFilePicker extends FormBuilderField<List<PlatformFile>> {
   /// to support user interactions with the picked files.
   final FileViewerBuilder? customFileViewerBuilder;
 
-  ///Whether to show bottm sheet fr images or files
+  ///Whether to show bottm sheet for images or files
   final bool showImagePickerOnImageExtensions;
+
+  ///Whether to show bottm sheet for docs
+  final bool allowDocScan;
 
   /// If you want to add your own logic for file picking.
   final Future<List<PlatformFile>?> Function(
@@ -99,6 +102,7 @@ class FormBuilderFilePicker extends FormBuilderField<List<PlatformFile>> {
     this.customFileViewerBuilder,
     this.showImagePickerOnImageExtensions = false,
     this.onFieldClicked,
+     this.allowDocScan=false,
   }) : super(
           key: key,
           initialValue: initialValue,
@@ -215,6 +219,7 @@ class _FormBuilderFilePickerState
               maxWidth: 400,
               preventPop: true,
               remainingImages: _remainingItemCount,
+              allowDocScan: widget.allowDocScan,
               imageQuality: 100,
               preferredCameraDevice: CameraDevice.rear,
               bottomSheetPadding: EdgeInsets.zero,
@@ -229,6 +234,24 @@ class _FormBuilderFilePickerState
                 state.requestFocus();
                 var newImages = <PlatformFile>[];
                 for (var image in images) {
+                  final newImage = PlatformFile(
+                    name: image.name,
+                    size: File(image.path).lengthSync(),
+                    bytes: widget.withData ? await image.readAsBytes() : null,
+                    readStream: widget.withReadStream ? image.openRead() : null,
+                    path: image.path,
+                  );
+                  newImages.add(newImage);
+                }
+                _setFiles([..._files, ...newImages], state);
+                field.didChange([...?value, ...newImages]);
+                if (!mounted) return;
+                Navigator.of(context).pop();
+              },
+              onDocSelected: (docFiles) async {
+                state.requestFocus();
+                final newImages = <PlatformFile>[];
+                for (var image in docFiles) {
                   final newImage = PlatformFile(
                     name: image.name,
                     size: File(image.path).lengthSync(),
@@ -352,7 +375,7 @@ class _FormBuilderFilePickerState
                         color: Colors.white.withOpacity(.8),
                         child: Text(
                           files[index].name,
-                          style: theme.textTheme.caption,
+                          style: theme.textTheme.bodySmall,
                           maxLines: 2,
                           overflow: TextOverflow.clip,
                         ),

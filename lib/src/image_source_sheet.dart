@@ -1,3 +1,5 @@
+import 'package:document_scanner_flutter/configs/configs.dart';
+import 'package:document_scanner_flutter/document_scanner_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:form_builder_file_picker/form_builder_file_picker.dart';
@@ -25,6 +27,9 @@ class ImageSourceBottomSheet extends StatefulWidget {
 
   /// Callback when images is selected.
   final void Function(Iterable<XFile> files) onImageSelected;
+
+  /// Callback when images is selected.
+  final void Function(Iterable<XFile> docFiles) onDocSelected;
   // Callback when files are selected.
   final void Function(List<PlatformFile> files) onFileSelected;
 
@@ -33,6 +38,10 @@ class ImageSourceBottomSheet extends StatefulWidget {
   final Widget galleryIcon;
   final Widget cameraLabel;
   final Widget galleryLabel;
+  final Widget docCameraIcon;
+  final Widget docCameraLabel;
+  final Widget docGalleryIcon;
+  final Widget docGalleryLabel;
   final Widget fileIcon;
   final Widget fileLabel;
   final EdgeInsets? bottomSheetPadding;
@@ -45,6 +54,7 @@ class ImageSourceBottomSheet extends StatefulWidget {
   final bool allowMultiple;
   final bool withData;
   final bool withReadStream;
+  final bool allowDocScan;
 
   const ImageSourceBottomSheet({
     Key? key,
@@ -61,6 +71,10 @@ class ImageSourceBottomSheet extends StatefulWidget {
     this.galleryLabel = const Text('Gallery'),
     this.fileIcon = const Icon(Icons.folder),
     this.fileLabel = const Text('Pick from files'),
+    this.docCameraIcon=const Icon(Icons.document_scanner),
+    this.docCameraLabel=const Text("Camera Scanner"),
+    this.docGalleryIcon=const Icon(Icons.image),
+    this.docGalleryLabel=const Text("Gallery"),
     this.bottomSheetPadding,
     this.type = FileType.any,
     this.allowedExtensions,
@@ -74,6 +88,7 @@ class ImageSourceBottomSheet extends StatefulWidget {
       padding: EdgeInsets.all(8.0),
       child: Text("Select Files From "),
     ),
+    required this.onDocSelected, required this.allowDocScan,
   }) : super(key: key);
 
   @override
@@ -82,6 +97,23 @@ class ImageSourceBottomSheet extends StatefulWidget {
 
 class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
   bool _isPickingImage = false;
+
+  Future<void> _docScan(
+      {required BuildContext context,
+      required ScannerFileSource source}) async {
+    final image = await DocumentScannerFlutter.launch(context, source: source);
+    try {
+      if (image != null) {
+        final imageXfile = XFile(image.path,
+            bytes: image.readAsBytesSync(),
+            length: image.lengthSync(),
+            lastModified: image.lastModifiedSync());
+        widget.onDocSelected([imageXfile]);
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
 
   Future<void> _onPickImage(ImageSource source) async {
     if (_isPickingImage) return;
@@ -107,7 +139,7 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
           imageQuality: widget.imageQuality,
         );
         _isPickingImage = false;
-        if (pickedFiles != null && pickedFiles.isNotEmpty) {
+        if (pickedFiles.isNotEmpty) {
           widget.onImageSelected(pickedFiles);
         }
       }
@@ -175,6 +207,25 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
                 icon: widget.fileIcon,
                 label: widget.fileLabel,
               ),
+               const SizedBox(
+                width: 8,
+              ),
+          if(widget.allowDocScan
+            )  ...[
+               ElevatedButton.icon(
+                onPressed: () => _docScan(context: context, source: ScannerFileSource.CAMERA),
+                icon: widget.docCameraIcon,
+                label: widget.docCameraLabel,
+              ),
+                const SizedBox(
+                width: 8,
+              ),
+               ElevatedButton.icon(
+                onPressed: () => _docScan(context: context, source: ScannerFileSource.GALLERY),
+                icon: widget.docGalleryIcon,
+                label: widget.docGalleryLabel,
+              ),
+            ]
             ],
           ),
         ],

@@ -100,11 +100,12 @@ packages:
   document_scanner_flutter:
     dependency: transitive
     description:
-      name: document_scanner_flutter
-      sha256: "1e595ac0ab436b509df7dc66e76b9e8792278214241be963b359e21d352b0f0f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.7"
+      path: "."
+      ref: master
+      resolved-ref: "409b8e755b50671ba2a04087ce758840e44e9f6c"
+      url: "https://github.com/Shreemanarjun/document_scanner_flutter.git"
+    source: git
+    version: "0.2.6"
   fake_async:
     dependency: transitive
     description:

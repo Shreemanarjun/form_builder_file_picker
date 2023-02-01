@@ -215,7 +215,7 @@ class _FormBuilderFilePickerState
           context: state.context,
           builder: (_) {
             return ImageSourceBottomSheet(
-              maxHeight: 400,
+              maxHeight: 500,
               maxWidth: 400,
               preventPop: true,
               remainingImages: _remainingItemCount,

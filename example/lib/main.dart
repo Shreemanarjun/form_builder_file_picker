@@ -127,7 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
               FormBuilderFilePicker(
                 name: 'docs',
                 decoration:
-                    const InputDecoration(labelText: 'Multi Attachments'),
+                    const InputDecoration(labelText: 'DOCS'),
                 maxFiles: null,
                 allowDocScan: true,
                 allowMultiple: true,

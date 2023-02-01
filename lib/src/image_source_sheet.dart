@@ -177,7 +177,7 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
   @override
   Widget build(BuildContext context) {
     Widget res = Container(
-      height: MediaQuery.of(context).size.height * 0.2,
+      height: MediaQuery.of(context).size.height * 0.25,
       width: MediaQuery.of(context).size.width,
       padding: widget.bottomSheetPadding,
       child: Column(

@@ -62,7 +62,7 @@ packages:
     description:
       path: "."
       ref: master
-      resolved-ref: "274e7d10e93adcd3f58e6f4f46a86d34aec169da"
+      resolved-ref: afdd66304fb0e805d3f8964c0eb4a89cb88fcadb
       url: "https://github.com/Shreemanarjun/edge_detection.git"
     source: git
     version: "1.1.1"
@@ -447,5 +447,5 @@ packages:
     source: hosted
     version: "0.2.0+3"
 sdks:
-  dart: ">=2.18.0 <4.0.0"
+  dart: ">=2.18.0 <3.0.0"
   flutter: ">=3.0.0"

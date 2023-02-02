@@ -8,7 +8,6 @@ environment:
 
 dependencies:
   community_material_icon: ^5.9.55
-  
   edge_detection:
     git:
       url: https://github.com/Shreemanarjun/edge_detection.git

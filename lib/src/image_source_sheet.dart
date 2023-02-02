@@ -1,7 +1,9 @@
-import 'package:cuervo_document_scanner/cuervo_document_scanner.dart';
+import 'package:edge_detection/edge_detection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:form_builder_file_picker/form_builder_file_picker.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ImageSourceBottomSheet extends StatefulWidget {
@@ -73,7 +75,7 @@ class ImageSourceBottomSheet extends StatefulWidget {
     this.docCameraIcon = const Icon(Icons.document_scanner),
     this.docCameraLabel = const Text("Camera Scanner"),
     this.docGalleryIcon = const Icon(Icons.image),
-    this.docGalleryLabel = const Text("Gallery"),
+    this.docGalleryLabel = const Text("Gallery Scanner"),
     this.bottomSheetPadding,
     this.type = FileType.any,
     this.allowedExtensions,
@@ -98,20 +100,67 @@ class ImageSourceBottomSheet extends StatefulWidget {
 class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
   bool _isPickingImage = false;
 
-  Future<void> _docScan(
-      {required BuildContext context, required Source source}) async {
-    final images = await CuervoDocumentScanner.getPictures(source);
-    try {
-      if (images != null) {
-        final newImages =<XFile> [];
-        for (var image in images) {
-          final imageXfile = XFile(image);
-          newImages.add(imageXfile);
+  Future<bool> checkCameraPermission() async {
+    // Check permissions and request its
+    bool isCameraGranted = await Permission.camera.request().isGranted;
+    if (!isCameraGranted) {
+      isCameraGranted =
+          await Permission.camera.request() == PermissionStatus.granted;
+    }
+    return isCameraGranted;
+  }
+
+  Future<void> _cameraScan() async {
+    if (await checkCameraPermission()) {
+      String imagePath = join((await getApplicationSupportDirectory()).path,
+          "${(DateTime.now().millisecondsSinceEpoch / 1000).round()}.jpeg");
+      try {
+        //Make sure to await the call to detectEdge.
+        bool success = await EdgeDetection.detectEdge(
+          imagePath,
+          canUseGallery: true,
+          androidScanTitle: 'Scanning', // use custom localizations for android
+          androidCropTitle: 'Crop',
+          androidCropBlackWhiteTitle: 'Black White',
+          androidCropReset: 'Reset',
+        );
+        if (success) {
+          final newXfile = XFile(imagePath);
+          widget.onDocSelected([newXfile]);
         }
-        widget.onDocSelected(newImages);
+      } catch (e) {
+        rethrow;
+      }
+    } else {
+      throw Exception("Camera Permission Denied");
+    }
+  }
+
+  Future<void> _galleryScan() async {
+    try {
+      String imagePath = join((await getApplicationSupportDirectory()).path,
+          "${(DateTime.now().millisecondsSinceEpoch / 1000).round()}.jpeg");
+      bool success = await EdgeDetection.detectEdgeFromGallery(
+        imagePath,
+        androidCropTitle: 'Crop', // use custom localizations for android
+        androidCropBlackWhiteTitle: 'Black White',
+        androidCropReset: 'Reset',
+      );
+      if (success) {
+        final newXfile = XFile(imagePath);
+        widget.onDocSelected([newXfile]);
       }
     } catch (e) {
       rethrow;
+    }
+  }
+
+  Future<void> _docScan(
+      {required BuildContext context, required ImageSource source}) async {
+    if (source == ImageSource.camera) {
+      await _cameraScan();
+    } else {
+      await _galleryScan();
     }
   }
 
@@ -212,8 +261,8 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
               ),
               if (widget.allowDocScan) ...[
                 ElevatedButton.icon(
-                  onPressed: () => _docScan(
-                      context: context, source: Source.CAMERA),
+                  onPressed: () =>
+                      _docScan(context: context, source: ImageSource.camera),
                   icon: widget.docCameraIcon,
                   label: widget.docCameraLabel,
                 ),
@@ -221,8 +270,8 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
                   width: 8,
                 ),
                 ElevatedButton.icon(
-                  onPressed: () => _docScan(
-                      context: context, source: Source.GALLERY),
+                  onPressed: () =>
+                      _docScan(context: context, source: ImageSource.gallery),
                   icon: widget.docGalleryIcon,
                   label: widget.docGalleryLabel,
                 ),

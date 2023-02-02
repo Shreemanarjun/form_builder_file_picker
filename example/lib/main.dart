@@ -128,12 +128,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 name: 'docs',
                 decoration:
                     const InputDecoration(labelText: 'DOCS'),
-                maxFiles: null,
+                maxFiles: 5,
                 allowDocScan: true,
                 allowMultiple: true,
                 type: FileType.custom,
                 allowedExtensions: const ['jpg', 'png', 'pdf'],
                 previewImages: true,
+                
                 showImagePickerOnImageExtensions: true,
                 withData: false,
                 withReadStream: false,
